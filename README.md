@@ -1,68 +1,81 @@
 # Decentralized Coin Creator
 
-This is a simple, decentralized web application for creating and managing your own digital coins. It leverages the Gun.js database for peer-to-peer data storage, meaning your coin's data is distributed across the network and isn't dependent on a central server.
-
----
+A simple, browser-based application for creating and managing your own decentralized digital coins, powered by Gun.js. This project allows anyone to launch their unique currency, manage user accounts, and track transactions directly in their browser without the need for a central server.
 
 ## Features
 
-* **Create Your Own Coin:** Define a custom name and symbol for your unique digital currency.
-* **Decentralized Data:** Coin information, accounts, and transactions are stored on the Gun.js peer-to-peer network.
-* **Owner Admin Panel:** Securely manage user accounts and mint new coins for your currency.
+* **Create Your Own Coin:** Define a unique name and symbol for your digital currency.
+* **Decentralized:** Built on Gun.js, meaning data is distributed and stored across connected peers.
+* **Admin Panel:** Securely manage user accounts and mint (give) coins as the owner.
 * **User Accounts:** Users can create accounts for any listed coin, log in, view their balance, and transfer coins to other users.
-* **Transaction History:** View a record of all transactions for your coin (as admin) or for your specific user account.
+* **Transaction History:** View a record of all transactions (mints and transfers) for a coin.
+* **Browser-Based:** No backend setup required; simply open the HTML file in a web browser.
 
----
+## How It Works
 
-## How to Use
+This application leverages [Gun.js](https://gun.eco/), a real-time, decentralized, offline-first, graph database. All coin data, including creation, accounts, and transactions, is stored and synchronized across the Gun.js network.
 
-1.  **Host on GitHub Pages:** Clone this repository and host it on GitHub Pages. The application is a single HTML file and runs entirely in the browser.
-    * [Link to this repository on GitHub](https://github.com/your-username/your-repo-name) (Remember to replace `your-username/your-repo-name` with your actual repository details after you push the code.)
-2.  **Create a New Coin:**
-    * Click "Create a New Coin".
-    * Enter a **Coin Name**, a **Coin Symbol** (2-5 uppercase letters), and an **Admin Password**.
-    * Click "Create My Coin".
-    * **Important:** Note down your Coin ID (Symbol) and Admin Password. The username for the admin panel is always `owner`.
-3.  **Explore Coins & Create Accounts:**
-    * Browse the "Explore All Coins" section to see newly created coins (including yours!).
-    * Click "Create Account" on any coin to make a new user account with a username and password.
-4.  **Login & Transfer:**
-    * Use "Login to Account" to access your user account.
-    * If you log in as `owner` with your admin password on your coin's card, you'll be redirected to the **Admin Panel**.
-    * As a user, you can transfer coins to other users from your account.
-5.  **Admin Panel:**
-    * From the admin panel, you can "Give Coins" (mint) to any user and view all accounts and transactions for your coin.
+## Live Demo
 
----
+Experience the Decentralized Coin Creator live in your browser:
+[https://jlaiii.github.io/Decentralized-Coin-Creator/](https://jlaiii.github.io/Decentralized-Coin-Creator/)
 
-## Technical Details
-
-* **Gun.js:** Provides the decentralized, real-time database capabilities.
-* **CryptoJS:** Used for hashing passwords securely before storage.
-* **HTML, CSS, JavaScript:** The entire application is built using standard web technologies and runs client-side.
-
----
-
-## Getting Started (Development)
+## Getting Started
 
 To run this project locally:
 
-1.  Clone the repository:
+1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
-    cd your-repo-name
+    git clone [https://github.com/jlaiii/Decentralized-Coin-Creator.git](https://github.com/jlaiii/Decentralized-Coin-Creator.git)
     ```
-2.  Open `index.html` in your web browser.
+2.  **Navigate to the project directory:**
+    ```bash
+    cd Decentralized-Coin-Creator
+    ```
+3.  **Open `index.html` in your web browser.**
 
----
+That's it! The application will connect to a public Gun.js peer and be ready for use.
 
-## Database Reset / Fresh Start
+## Usage
 
-If you want to clear all data and start with a blank slate, you can modify the `DB_ROOT_NAME` constant in `index.html`. For example, change it from `'decentralized_coin_creator_v4'` to `'decentralized_coin_creator_v5'` (or any new unique string). This effectively creates a new, empty data space on the Gun.js network for your application instance.
+### Creating a New Coin
 
-```javascript
-// In index.html, find this line:
-const DB_ROOT_NAME = 'decentralized_coin_creator_v4';
+1.  Click the "Create a New Coin" button.
+2.  Enter a **Coin Name**, a unique **Coin Symbol** (2-5 uppercase letters), and an **Admin Password**.
+3.  Click "Create My Coin".
+4.  Remember your **Coin ID (Symbol)** and that the default **Username for Admin Panel is `owner`**.
 
-// Change it to something new:
-const DB_ROOT_NAME = 'decentralized_coin_creator_v5'; // Or any other unique name
+### Accessing the Admin Panel (as Owner)
+
+1.  Find your coin in the "Explore All Coins" list.
+2.  Click "Login to Account" on your coin card.
+3.  Enter **Username:** `owner` and your **Admin Password**.
+4.  Upon successful login, you will be redirected to the Admin Panel for your coin.
+
+### Creating a User Account
+
+1.  Find the desired coin in the "Explore All Coins" list.
+2.  Click "Create Account" on the coin card.
+3.  Choose a **Username** and a **Password**.
+4.  Click "Create Account".
+
+### Logging In as a User
+
+1.  Find your coin in the "Explore All Coins" list.
+2.  Click "Login to Account" on your coin card.
+3.  Enter your **Username** and **Password**.
+
+### Transferring Coins
+
+1.  Ensure you are logged into a user account on a coin.
+2.  Click "Transfer Coins" on that coin's card.
+3.  Enter the **Recipient Username** and **Amount** to transfer.
+4.  Click "Confirm Transfer".
+
+## Contributing
+
+Feel free to fork this repository, open issues, or submit pull requests.
+
+## License
+
+This project is open-source and available under the [MIT License](LICENSE).
