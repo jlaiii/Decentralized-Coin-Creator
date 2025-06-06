@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decentralized Coin Creator</title>
+  <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Inter', sans-serif;
+      background-color: #f0f2f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #333;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .container {
+      width: 700px;
+      max-width: 100%;
+      margin-bottom: 20px;
+      padding: 25px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      box-sizing: border-box;
+    }
+
+    .section-header {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #34495e;
+      font-size: 1.4em;
+      font-weight: 600;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    input[type=text],
+    input[type=password],
+    input[type=number] {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ced4da;
+      border-radius: 5px;
+      font-size: 1em;
+      color: #495057;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-sizing: border-box;
+      margin-bottom: 15px;
+    }
+
+    input[type=text]:focus,
+    input[type=password]:focus,
+    input[type=number]:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      outline: none;
+    }
+
+    button {
+      padding: 12px 25px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.05em;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      font-weight: 600;
+      white-space: nowrap;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 10px;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #0056b3;
+      transform: translateY(-1px);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background-color: #a0a0a0;
+      cursor: not-allowed;
+    }
+
+    .info-box {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #e9f7ef;
+      border: 1px solid #d4edda;
+      border-radius: 5px;
+      color: #155724;
+      font-size: 0.95em;
+      word-break: break-all;
+    }
+
+    .error-box {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-radius: 5px;
+      color: #721c24;
+      font-size: 0.95em;
+    }
+
+    #admin-panel {
+      display: none; /* Hidden by default, managed by JS */
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    #toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        pointer-events: none;
+    }
+
+    .toast-message {
+        background-color: #333;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        font-size: 0.95em;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        transform: translateY(-20px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        max-width: 300px;
+        text-align: center;
+        pointer-events: auto;
+    }
+
+    .toast-message.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .toast-message.success {
+        background-color: #28a745;
+    }
+
+    .toast-message.error {
+        background-color: #dc3545;
+    }
+    .toast-message.warning {
+        background-color: #ffc107;
+        color: #333;
+    }
+
+    /* Styles for Coin List */
+    #coin-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .coin-card {
+        background-color: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .coin-card h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #2c3e50;
+        font-size: 1.3em;
+    }
+
+    .coin-card p {
+        margin-bottom: 10px;
+        font-size: 0.95em;
+        color: #666;
+    }
+
+    .coin-card button {
+        width: auto; /* Allow button to size to content */
+        align-self: flex-start; /* Align button to start within flex container */
+        padding: 8px 15px;
+        font-size: 0.9em;
+        margin-top: 10px;
+        margin-right: 5px; /* Space between buttons */
+    }
+    .coin-card button.create-account-btn {
+      background-color: #28a745; /* Green for account creation */
+    }
+    .coin-card button.create-account-btn:hover:not(:disabled) {
+      background-color: #218838;
+    }
+    .coin-card button.create-account-btn:disabled {
+      background-color: #a0a0a0;
+    }
+    .coin-card button.login-account-btn {
+      background-color: #007bff; /* Blue for login */
+    }
+    .coin-card button.login-account-btn:hover:not(:disabled) {
+      background-color: #0056b3;
+    }
+    .coin-card button.logout-account-btn {
+        background-color: #6c757d; /* Grey for logout */
+    }
+    .coin-card button.logout-account-btn:hover:not(:disabled) {
+        background-color: #5a6268;
+    }
+    .coin-card button.transfer-user-coins-btn { /* Style for new transfer button */
+        background-color: #f8971f; /* Orange */
+    }
+    .coin-card button.transfer-user-coins-btn:hover:not(:disabled) {
+        background-color: #e08e0b;
+    }
+    .coin-card button.view-transactions-btn { /* Style for view transactions button */
+        background-color: #17a2b8; /* Teal */
+    }
+    .coin-card button.view-transactions-btn:hover:not(:disabled) {
+        background-color: #138496;
+    }
+
+    .my-balance-display {
+        font-weight: bold;
+        color: #007bff;
+        margin-top: 15px;
+        border-top: 1px solid #eee;
+        padding-top: 10px;
+    }
+
+    /* Admin Panel Specific Styles */
+    #admin-accounts-list, #admin-transactions-list {
+        max-height: 300px; /* Limit height for scroll */
+        overflow-y: auto;
+        border: 1px solid #e0e0e0;
+        border-radius: 5px;
+        padding: 10px;
+        background-color: #fcfcfc;
+    }
+    .admin-account-item, .transaction-item {
+        padding: 8px 0;
+        border-bottom: 1px dashed #eee;
+        font-size: 0.95em;
+        color: #444;
+    }
+    .admin-account-item:last-child, .transaction-item:last-child {
+        border-bottom: none;
+    }
+    .transaction-item strong {
+        color: #2c3e50;
+    }
+    .transaction-item .timestamp {
+        font-size: 0.8em;
+        color: #888;
+        float: right;
+    }
+    .transaction-item.mint {
+        background-color: #e9f7ef;
+        padding: 8px;
+        border-radius: 5px;
+        margin-bottom: 5px;
+    }
+    .transaction-item.transfer {
+        background-color: #e0f2f7;
+        padding: 8px;
+        border-radius: 5px;
+        margin-bottom: 5px;
+    }
+
+
+    /* Modal Styles */
+    .modal {
+        display: none; /* HIDDEN BY DEFAULT: Changed from 'flex' to 'none' */
+        position: fixed; /* Stay in place */
+        z-index: 1001; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        /* These are used by JS when showing the modal */
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 30px;
+        border: 1px solid #888;
+        width: 90%;
+        max-width: 500px;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    .close-button {
+        color: #aaa;
+        float: right;
+        font-size: 36px;
+        font-weight: bold;
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        cursor: pointer;
+    }
+
+    .close-button:hover,
+    .close-button:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .modal h3 {
+        margin-top: 0;
+        color: #34495e;
+        font-size: 1.5em;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .modal .form-group {
+        margin-bottom: 15px;
+    }
+    .modal button {
+        margin-top: 20px;
+        width: 100%;
+    }
+    #user-transactions-list {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 5px;
+      padding: 10px;
+      background-color: #fcfcfc;
+    }
+
+
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      .container {
+        padding: 15px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+      .toast-message {
+        max-width: 90%;
+      }
+      #coin-list {
+        grid-template-columns: 1fr; /* Stack cards on small screens */
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Decentralized Coin Creator</h1>
+
+  <div id="explore-coins-section" class="container">
+    <h2 class="section-header">Explore All Coins</h2>
+    <p>Browse coins created by anyone and make your own accounts!</p>
+    <div class="form-group">
+        <label for="search-coins-input">Search Coins:</label>
+        <input type="text" id="search-coins-input" placeholder="Search by name or symbol...">
+    </div>
+    <div id="coin-list">
+      <p id="coin-list-message" style="text-align: center; color: #777;">Loading coins...</p>
+    </div>
+  </div>
+
+  <div class="container" style="text-align: center;">
+      <button id="toggle-create-coin-btn" style="width: auto;">Create a New Coin</button>
+  </div>
+
+  <div id="create-coin-section" class="container" style="display: none;">
+    <h2 class="section-header">Create Your Own Coin</h2>
+    <div class="form-group">
+        <label for="coin-name">Coin Name:</label>
+        <input type="text" id="coin-name" placeholder="e.g., My Awesome Coin" required>
+    </div>
+    <div class="form-group">
+        <label for="coin-symbol">Coin Symbol (2-5 uppercase letters):</label>
+        <input type="text" id="coin-symbol" placeholder="e.g., MYC" maxlength="5" minlength="2" required pattern="^[A-Z]{2,5}$" title="2-5 uppercase letters">
+    </div>
+    <div class="form-group">
+        <label for="admin-password">Admin Password (for managing this coin):</label>
+        <input type="password" id="admin-password" placeholder="Choose a strong password" required>
+    </div>
+    <button id="create-coin-btn">Create My Coin</button>
+    <<div id="create-coin-feedback" class="info-box" style="display: none;">
+    <p>Your coin has been created!</p>
+    <p><strong>Coin ID (Symbol):</strong> <span id="created-coin-id"></span></p>
+    <p><strong>Username:</strong> owner</p> <p>Keep your owner password safe!</p>
+    <button id="copy-coin-id-btn" style="margin-top: 15px;">Copy Coin ID</button>
+</div>
+  </div>
+
+  <div id="admin-panel" class="container">
+    <h2 class="section-header">Admin Panel for <span id="current-coin-name"></span> (<span id="current-coin-symbol"></span>)</h2>
+    <p>Welcome, Coin Admin! Here you can manage your coin's accounts.</p>
+
+    <div style="margin-top: 20px;">
+        <h3 style="margin-top: 0;">Owner's Balance: <span id="owner-balance-display">0</span> <span id="owner-coin-symbol"></span></h3>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <h3 class="section-header" style="font-size: 1.2em;">Give Coins to Users</h3>
+        <div class="form-group">
+            <label for="admin-give-target-username">Target Username:</label>
+            <input type="text" id="admin-give-target-username" placeholder="e.g., alice" required>
+        </div>
+        <div class="form-group">
+            <label for="admin-give-amount">Amount:</label>
+            <input type="number" id="admin-give-amount" min="1" value="1" required>
+        </div>
+        <button id="admin-give-coins-btn">Give Coins</button>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <h3 class="section-header" style="font-size: 1.2em;">All Accounts</h3>
+        <div id="admin-accounts-list">
+            <p style="text-align: center; color: #777;">Loading accounts...</p>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <h3 class="section-header" style="font-size: 1.2em;">Transaction History</h3>
+        <div id="admin-transactions-list">
+            <p style="text-align: center; color: #777;">Loading transactions...</p>
+        </div>
+    </div>
+
+    <button id="logout-admin-btn">Logout</button>
+    <button id="delete-this-coin-btn" style="background-color: #dc3545; margin-top: 30px;">Delete This Coin</button>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <div id="transfer-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button transfer-close-button">&times;</span>
+      <h3>Transfer <span id="modal-coin-name-symbol"></span> Coins</h3>
+      <p>From: <strong id="modal-sender-username"></strong></p>
+      <div class="form-group">
+          <label for="modal-recipient-username">Recipient Username:</label>
+          <input type="text" id="modal-recipient-username" required>
+      </div>
+      <div class="form-group">
+          <label for="modal-transfer-amount">Amount:</label>
+          <input type="number" id="modal-transfer-amount" min="1" required>
+      </div>
+      <button id="confirm-transfer-btn">Confirm Transfer</button>
+    </div>
+  </div>
+
+  <div id="create-account-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button create-account-close-button">&times;</span>
+      <h3>Create Account for <span id="create-account-modal-coin-name-symbol"></span></h3>
+      <div class="form-group">
+          <label for="create-account-username">Username:</label>
+          <input type="text" id="create-account-username" placeholder="e.g., alice" required>
+      </div>
+      <div class="form-group">
+          <label for="create-account-password">Password (3-32 characters):</label>
+          <input type="password" id="create-account-password" placeholder="Choose a strong password" minlength="3" maxlength="32" required>
+      </div>
+      <button id="confirm-create-account-btn">Create Account</button>
+    </div>
+  </div>
+
+  <div id="login-account-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button login-account-close-button">&times;</span>
+      <h3>Login to <span id="login-account-modal-coin-name-symbol"></span></h3>
+      <div class="form-group">
+          <label for="login-account-username">Username:</label>
+          <input type="text" id="login-account-username" placeholder="Your username" required>
+      </div>
+      <div class="form-group">
+          <label for="login-account-password">Password:</label>
+          <input type="password" id="login-account-password" placeholder="Your password" required>
+      </div>
+      <button id="confirm-login-account-btn">Login</button>
+    </div>
+  </div>
+
+  <div id="user-transactions-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button user-transactions-close-button">&times;</span>
+      <h3>My Transactions for <span id="user-transactions-modal-coin-name-symbol"></span></h3>
+      <div id="user-transactions-list">
+        <p style="text-align: center; color: #777;">Loading transactions...</p>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    // Changed database name here
+    const gun = Gun({
+      peers: ['https://gun-manhattan.herokuapp.com/gun']
+    });
+
+    const DB_ROOT_NAME = 'decentralized_coin_creator_v5'; // New database root name for transaction history
+
+    // --- Utility Functions ---
+    function hashPassword(password) {
+      return CryptoJS.SHA256(password).toString();
+    }
+
+    function showToast(message, type = 'default', duration = 3000) {
+        const toastContainer = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.classList.add('toast-message');
+        if (type !== 'default') {
+            toast.classList.add(type);
+        }
+        toast.textContent = message;
+
+        toastContainer.prepend(toast);
+
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 100);
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+        }, duration);
+    }
+
+    function formatTimestamp(timestamp) {
+        if (!timestamp) return 'N/A';
+        const date = new Date(timestamp);
+        return date.toLocaleString(); // e.g., "6/6/2025, 4:05:35 PM"
+    }
+
+
+    // --- Element References ---
+    const createCoinSection = document.getElementById('create-coin-section');
+    const coinNameInput = document.getElementById('coin-name');
+    const coinSymbolInput = document.getElementById('coin-symbol');
+    const adminPasswordInput = document.getElementById('admin-password');
+    const createCoinBtn = document.getElementById('create-coin-btn');
+    const createCoinFeedback = document.getElementById('create-coin-feedback');
+    const createdCoinIdSpan = document.getElementById('created-coin-id');
+    const copyCoinIdBtn = document.getElementById('copy-coin-id-btn');
+
+    // Removed references to accessCoinSection and its related inputs/buttons
+    // const accessCoinSection = document.getElementById('access-coin-section');
+    // const accessCoinIdInput = document.getElementById('access-coin-id');
+    // const accessAdminPasswordInput = document.getElementById('access-admin-password');
+    // const accessCoinBtn = document.getElementById('access-coin-btn');
+    // const accessCoinFeedback = document.getElementById('access-coin-feedback');
+
+    const exploreCoinsSection = document.getElementById('explore-coins-section');
+    const coinListDiv = document.getElementById('coin-list');
+    let coinListMessageElement = document.getElementById('coin-list-message');
+    const searchCoinsInput = document.getElementById('search-coins-input');
+
+    const adminPanel = document.getElementById('admin-panel');
+    const currentCoinNameSpan = document.getElementById('current-coin-name');
+    const currentCoinSymbolSpan = document.getElementById('current-coin-symbol'); // This now only stores the symbol
+    const logoutAdminBtn = document.getElementById('logout-admin-btn');
+    const deleteThisCoinBtn = document.getElementById('delete-this-coin-btn');
+
+    // New Toggle Buttons
+    const toggleCreateCoinBtn = document.getElementById('toggle-create-coin-btn');
+    // Removed reference to toggleAccessAdminBtn
+    // const toggleAccessAdminBtn = document.getElementById('toggle-access-admin-btn');
+
+    // --- Admin Panel Element References ---
+    const ownerBalanceDisplay = document.getElementById('owner-balance-display');
+    const ownerCoinSymbolSpan = document.getElementById('owner-coin-symbol'); // This now stores the full name (Bitcoin (BTC))
+    const adminGiveTargetUsernameInput = document.getElementById('admin-give-target-username');
+    const adminGiveAmountInput = document.getElementById('admin-give-amount');
+    const adminGiveCoinsBtn = document.getElementById('admin-give-coins-btn');
+
+    const adminAccountsListDiv = document.getElementById('admin-accounts-list');
+    const adminTransactionsListDiv = document.getElementById('admin-transactions-list');
+
+    // --- Transfer Modal Element References ---
+    const transferModal = document.getElementById('transfer-modal');
+    const transferModalCloseButton = transferModal.querySelector('.transfer-close-button');
+    const modalCoinNameSymbolSpan = document.getElementById('modal-coin-name-symbol');
+    const modalSenderUsernameSpan = document.getElementById('modal-sender-username');
+    const modalRecipientUsernameInput = document.getElementById('modal-recipient-username');
+    const modalTransferAmountInput = document.getElementById('modal-transfer-amount');
+    const confirmTransferBtn = document.getElementById('confirm-transfer-btn');
+
+    // --- New Account Creation Modal Element References ---
+    const createAccountModal = document.getElementById('create-account-modal');
+    const createAccountModalCloseButton = createAccountModal.querySelector('.create-account-close-button');
+    const createAccountModalCoinNameSymbolSpan = document.getElementById('create-account-modal-coin-name-symbol');
+    const createAccountUsernameInput = document.getElementById('create-account-username');
+    const createAccountPasswordInput = document.getElementById('create-account-password');
+    const confirmCreateAccountBtn = document.getElementById('confirm-create-account-btn');
+
+    // --- New Account Login Modal Element References ---
+    const loginAccountModal = document.getElementById('login-account-modal');
+    const loginAccountModalCloseButton = loginAccountModal.querySelector('.login-account-close-button');
+    const loginAccountModalCoinNameSymbolSpan = document.getElementById('login-account-modal-coin-name-symbol');
+    const loginAccountUsernameInput = document.getElementById('login-account-username');
+    const loginAccountPasswordInput = document.getElementById('login-account-password');
+    const confirmLoginAccountBtn = document.getElementById('confirm-login-account-btn');
+
+    // --- User Transactions History Modal Element References ---
+    const userTransactionsModal = document.getElementById('user-transactions-modal');
+    const userTransactionsModalCloseButton = userTransactionsModal.querySelector('.user-transactions-close-button');
+    const userTransactionsModalCoinNameSymbolSpan = document.getElementById('user-transactions-modal-coin-name-symbol');
+    const userTransactionsListDiv = document.getElementById('user-transactions-list');
+
+
+    let currentAdminCoinId = null;
+    const ownerAccountName = "owner";
+
+    const loggedInAccounts = {}; // { coinID: { username: "...", balance: 100, coinName: "...", coinSymbol: "..." } }
+    let coinMapListener = null; // Listener for all coins
+    let adminCoinAccountsMapListener = null; // Listener for admin panel accounts
+    let adminCoinTransactionsMapListener = null; // Listener for admin panel transactions
+    let userCoinTransactionsMapListener = null; // Listener for user specific transactions
+
+    let currentTransferSender = { coinID: null, coinName: null, coinSymbol: null, username: null };
+    let currentAccountActionCoin = { coinID: null, coinSymbol: null, coinName: null };
+    let currentUserTransactionContext = { coinID: null, coinSymbol: null, username: null, coinName: null };
+
+
+    // --- UI State Management ---
+    function updateToggleButtons() {
+        if (createCoinSection.style.display === 'block') {
+            toggleCreateCoinBtn.textContent = 'Hide Coin Creation';
+        } else {
+            toggleCreateCoinBtn.textContent = 'Create a New Coin';
+        }
+
+        // The "Access Coin Admin Panel" button and section are now completely removed,
+        // so no need to manage their visibility here.
+        // toggleAccessAdminBtn.style.display is always 'none' now in practice.
+
+        // Hide toggle buttons when admin panel is active
+        if (adminPanel.style.display === 'block') {
+            toggleCreateCoinBtn.style.display = 'none';
+        } else {
+            toggleCreateCoinBtn.style.display = 'inline-block';
+        }
+    }
+
+    function showInitialUI() {
+        createCoinSection.style.display = 'none';
+        // accessCoinSection.style.display = 'none'; // No longer needed as section is removed from HTML
+        exploreCoinsSection.style.display = 'block';
+        adminPanel.style.display = 'none';
+        hideAllModals();
+        updateToggleButtons(); // Update button states on initial UI load
+    }
+
+    function showAdminPanel(show) {
+        adminPanel.style.display = show ? 'block' : 'none';
+        if (show) {
+            createCoinSection.style.display = 'none';
+            // accessCoinSection.style.display = 'none'; // No longer needed
+            exploreCoinsSection.style.display = 'none';
+            hideAllModals();
+        } else {
+            showInitialUI(); // Revert to initial UI when admin panel is hidden
+        }
+        updateToggleButtons(); // Update button states
+    }
+
+    function hideAllModals() {
+        transferModal.style.display = 'none';
+        createAccountModal.style.display = 'none';
+        loginAccountModal.style.display = 'none';
+        // Clear user transaction listener if open before closing the modal
+        if (userCoinTransactionsMapListener && currentUserTransactionContext.coinID) {
+            gun.get(DB_ROOT_NAME).get('coins').get(currentUserTransactionContext.coinID).get('transactions').off(userCoinTransactionsMapListener);
+            userCoinTransactionsMapListener = null;
+            userTransactionsListDiv.innerHTML = '<p style="text-align: center; color: #777;">Loading transactions...</p>';
+            currentUserTransactionContext = { coinID: null, coinSymbol: null, username: null, coinName: null };
+        }
+        userTransactionsModal.style.display = 'none';
+    }
+
+
+    // --- Event Listeners ---
+
+    // Toggle Handlers
+    toggleCreateCoinBtn.onclick = () => {
+        hideAllModals();
+        // accessCoinSection.style.display = 'none'; // No longer needed
+        createCoinSection.style.display = createCoinSection.style.display === 'none' ? 'block' : 'none';
+        updateToggleButtons();
+    };
+
+    // Removed toggleAccessAdminBtn handler
+    // toggleAccessAdminBtn.onclick = () => {
+    //     hideAllModals();
+    //     createCoinSection.style.display = 'none'; // Ensure other section is hidden
+    //     accessCoinSection.style.display = accessCoinSection.style.display === 'none' ? 'block' : 'none';
+    //     updateToggleButtons();
+    // };
+
+    // Create Coin Logic
+    createCoinBtn.onclick = async () => {
+      const coinName = coinNameInput.value.trim();
+      const coinSymbol = coinSymbolInput.value.trim().toUpperCase();
+      const adminPassword = adminPasswordInput.value;
+
+      if (!coinName || !coinSymbol || !adminPassword) {
+        showToast('Please fill in all fields correctly.', 'error');
+        return;
+      }
+
+      const symbolRegex = /^[A-Z]{2,5}$/;
+      if (!symbolRegex.test(coinSymbol)) {
+        showToast('Coin Symbol must be 2-5 uppercase letters.', 'error');
+        return;
+      }
+
+      createCoinBtn.disabled = true;
+      createCoinBtn.textContent = 'Creating Coin...';
+      createCoinFeedback.style.display = 'none';
+      // accessCoinFeedback.style.display = 'none'; // No longer needed
+      console.log(`Attempting to create coin: ${coinName} (${coinSymbol})`);
+
+      const adminPassHash = hashPassword(adminPassword);
+
+      gun.get(DB_ROOT_NAME).get('coins').get(coinSymbol).once((data) => {
+        console.log(`Check for existing coin '${coinSymbol}':`, data);
+        if (data !== undefined && data !== null) {
+          showToast(`Coin with symbol "${coinSymbol}" already exists. Please choose a different symbol.`, 'error');
+          createCoinBtn.disabled = false;
+          createCoinBtn.textContent = 'Create My Coin';
+          return;
+        }
+
+        const coinData = {
+          name: coinName,
+          symbol: coinSymbol,
+          ownerPassHash: adminPassHash,
+          createdAt: Date.now()
+        };
+
+        gun.get(DB_ROOT_NAME).get('coins').get(coinSymbol).put(coinData, (ack) => {
+          if (ack.err) {
+            showToast(`Error creating coin: ${ack.err}`, 'error');
+            console.error('Error saving coin metadata:', ack.err);
+            createCoinBtn.disabled = false;
+            createCoinBtn.textContent = 'Create My Coin';
+            return;
+          }
+          console.log(`Coin metadata for ${coinSymbol} saved. ACK:`, ack);
+
+          // Initialize the owner's account for this coin with 0 balance
+          gun.get(DB_ROOT_NAME).get('coins').get(coinSymbol).get('accounts').get(ownerAccountName).put({ balance: 0, pinHash: adminPassHash }, (accountAck) => {
+              if (accountAck.err) {
+                  showToast(`Coin created, but error setting owner balance: ${accountAck.err}`, 'error');
+                  console.error('Error setting owner account balance:', accountAck.err);
+              } else {
+                  showToast('Coin created successfully!', 'success');
+                  createdCoinIdSpan.textContent = coinSymbol;
+                  createCoinFeedback.style.display = 'block';
+                  coinNameInput.value = '';
+                  coinSymbolInput.value = '';
+                  adminPasswordInput.value = '';
+                  console.log(`Owner account for ${coinSymbol} initialized with 0 balance and hashed PIN. ACK:`, accountAck);
+              }
+              createCoinBtn.disabled = false;
+              createCoinBtn.textContent = 'Create My Coin';
+          });
+        });
+      });
+    };
+
+    copyCoinIdBtn.onclick = () => {
+        const coinIdToCopy = createdCoinIdSpan.textContent;
+        if (coinIdToCopy) {
+            navigator.clipboard.writeText(coinIdToCopy).then(() => {
+                showToast('Coin ID copied to clipboard!', 'success');
+                copyCoinIdBtn.textContent = 'Copied!';
+                setTimeout(() => copyCoinIdBtn.textContent = 'Copy Coin ID', 1500);
+            }).catch(err => {
+                showToast('Failed to copy ID. Please copy it manually.', 'error');
+                console.error('Failed to copy Coin ID:', err);
+            });
+        }
+    };
+
+    // Removed Access Coin Logic (Admin Panel) - Now only through coin card login
+    // accessCoinBtn.onclick = async () => { ... }
+
+
+    // Logout Admin Logic
+    logoutAdminBtn.onclick = () => {
+        if (currentAdminCoinId) {
+            if (adminCoinAccountsMapListener) {
+                gun.get(DB_ROOT_NAME).get('coins').get(currentAdminCoinId).get('accounts').off(adminCoinAccountsMapListener);
+                adminCoinAccountsMapListener = null;
+                console.log("Admin: Cleared admin accounts listener on logout.");
+            }
+            if (adminCoinTransactionsMapListener) {
+                gun.get(DB_ROOT_NAME).get('coins').get(currentAdminCoinId).get('transactions').off(adminCoinTransactionsMapListener);
+                adminCoinTransactionsMapListener = null;
+                console.log("Admin: Cleared admin transactions listener on logout.");
+            }
+            gun.get(DB_ROOT_NAME).get('coins').get(currentAdminCoinId).get('accounts').get(ownerAccountName).get('balance').off();
+            console.log("Admin: Cleared owner balance listener on logout.");
+        }
+
+        currentAdminCoinId = null;
+        showAdminPanel(false);
+        showToast('Logged out from admin panel.', 'default');
+        console.log("Logged out from admin panel.");
+    };
+
+    // Delete This Coin Logic
+    deleteThisCoinBtn.onclick = () => {
+        if (!currentAdminCoinId) {
+            showToast("No coin selected for deletion.", "error");
+            return;
+        }
+        const coinNameToDelete = currentCoinNameSpan.textContent.split('(')[0].trim();
+        const coinSymbolToDelete = currentCoinSymbolSpan.textContent;
+        if (confirm(`WARNING: Are you sure you want to PERMANENTLY delete the coin "${coinNameToDelete} (${coinSymbolToDelete})"? This will delete all its accounts and data.`)) {
+            showToast(`Attempting to delete coin ${coinNameToDelete} (${coinSymbolToDelete})...`, "warning", 5000);
+            console.log(`Admin: Initiating deletion of coin: ${currentAdminCoinId}`);
+
+            gun.get(DB_ROOT_NAME).get('coins').get(currentAdminCoinId).put(null, (ack) => {
+                if (ack.err) {
+                    showToast(`Error deleting coin ${coinNameToDelete} (${coinSymbolToDelete}): ${ack.err}`, "error");
+                    console.error(`Admin: Error deleting coin ${currentAdminCoinId}:`, ack.err);
+                } else {
+                    showToast(`Coin "${coinNameToDelete} (${coinSymbolToDelete})" successfully deleted!`, 'success');
+                    console.log(`Admin: Coin ${currentAdminCoinId} deleted. ACK:`, ack);
+
+                    logoutAdminBtn.click();
+                }
+            });
+        }
+    };
+
+    // --- Coin Listing and Account Creation/Login Logic (Explore All Coins) ---
+    const coinCardElements = {};
+
+    function updateCoinListMessage(message, type = 'loading') {
+        if (!coinListMessageElement || !coinListDiv.contains(coinListMessageElement)) {
+            coinListMessageElement = document.createElement('p');
+            coinListMessageElement.id = 'coin-list-message';
+            Array.from(coinListDiv.children).forEach(child => {
+                if (!child.classList.contains('coin-card') && child.id !== 'coin-list-message') {
+                    child.remove();
+                }
+            });
+            coinListDiv.prepend(coinListMessageElement);
+        }
+        coinListMessageElement.style.display = 'block';
+        coinListMessageElement.textContent = message;
+        coinListMessageElement.style.color = (type === 'error' || type === 'empty') ? '#dc3545' : '#777';
+        console.log(`Coin List UI Message: ${message}`);
+    }
+
+
+    function displayAllCoins() {
+        console.log("Entering displayAllCoins function...");
+        updateCoinListMessage('Loading coins...');
+
+        if (coinMapListener) {
+            console.log("Removing previous Gun.js map listener.");
+            gun.get(DB_ROOT_NAME).get('coins').off(coinMapListener);
+            coinMapListener = null;
+        }
+
+        console.log("Clearing existing coin cards from DOM and in-memory cache.");
+        for (const coinId in coinCardElements) {
+            if (coinCardElements[coinId].parentNode === coinListDiv) {
+                coinListDiv.removeChild(coinCardElements[coinId]);
+            }
+        }
+        Object.keys(coinCardElements).forEach(key => delete coinCardElements[key]);
+
+
+        let hasReceivedAnyCoinData = false;
+        let noCoinsTimeout = setTimeout(() => {
+            if (!hasReceivedAnyCoinData && Object.keys(coinCardElements).length === 0) {
+                updateCoinListMessage('No coins found yet. Be the first to create one!', 'empty');
+                console.log("No coins received within timeout. Displaying 'no coins' message.");
+            } else if (Object.keys(coinCardElements).length > 0) {
+                if (coinListMessageElement) coinListMessageElement.style.display = 'none';
+            }
+        }, 5000);
+        console.log("Set 5-second timeout for 'no coins found' message.");
+
+
+        coinMapListener = gun.get(DB_ROOT_NAME).get('coins').map().on(function(coinData, coinID) {
+            console.log("Gun.js map() received data:", { coinData, coinID });
+
+            clearTimeout(noCoinsTimeout);
+            hasReceivedAnyCoinData = true;
+
+            if (coinListMessageElement) {
+                coinListMessageElement.style.display = 'none';
+            }
+            
+            if (coinData && Gun.node.is(coinData) && coinData.name && coinData.symbol) {
+                console.log("Coin data processed as valid Gun node:", coinData);
+                const fullCoinName = `${coinData.name} (${coinData.symbol})`;
+                
+                if (!coinCardElements[coinID]) {
+                    console.log(`Adding new coin card for: ${fullCoinName} (ID: ${coinID})`);
+                    const coinCard = document.createElement('div');
+                    coinCard.className = 'coin-card';
+                    coinCard.dataset.coinId = coinID;
+                    coinCard.dataset.coinName = coinData.name;
+                    coinCard.dataset.coinSymbol = coinData.symbol;
+
+                    const loggedInUser = loggedInAccounts[coinID];
+                    const balanceDisplay = loggedInUser
+                        ? `<p class="my-balance-display" id="balance-${coinID}">My Balance: <span class="balance-amount">${loggedInUser.balance}</span> ${fullCoinName}</p>`
+                        : `<p class="my-balance-display" id="balance-${coinID}" style="display:none;">My Balance: <span class="balance-amount"></span> ${fullCoinName}</p>`;
+
+                    coinCard.innerHTML = `
+                        <h3>${fullCoinName}</h3>
+                        <p>ID: ${coinID}</p>
+                        <div class="account-actions">
+                            <button class="create-account-btn" data-coin-id="${coinID}" data-coin-name="${coinData.name}" data-coin-symbol="${coinData.symbol}" style="${loggedInUser ? 'display:none;' : 'display:inline-block;'}">Create Account</button>
+                            <button class="login-account-btn" data-coin-id="${coinID}" data-coin-name="${coinData.name}" data-coin-symbol="${coinData.symbol}" style="${loggedInUser ? 'display:none;' : 'display:inline-block;'}">Login to Account</button>
+                            <button class="logout-account-btn" data-coin-id="${coinID}" data-coin-name="${coinData.name}" data-coin-symbol="${coinData.symbol}" style="${loggedInUser ? 'display:inline-block;' : 'display:none;'}">Logout (${loggedInUser ? loggedInUser.username : ''})</button>
+                            <button class="transfer-user-coins-btn" data-coin-id="${coinID}" data-coin-name="${coinData.name}" data-coin-symbol="${coinData.symbol}" style="${loggedInUser ? 'display:inline-block;' : 'display:none;'}">Transfer Coins</button>
+                            <button class="view-transactions-btn" data-coin-id="${coinID}" data-coin-name="${coinData.name}" data-coin-symbol="${coinData.symbol}" style="${loggedInUser ? 'display:inline-block;' : 'display:none;'}">View My Transactions</button>
+                            ${balanceDisplay}
+                        </div>
+                    `;
+                    coinListDiv.appendChild(coinCard);
+                    coinCardElements[coinID] = coinCard;
+
+                    attachCoinCardEventListeners(coinCard, coinID, coinData.name, coinData.symbol);
+
+                } else {
+                    const existingCard = coinCardElements[coinID];
+                    const h3 = existingCard.querySelector('h3');
+                    const balanceSpan = existingCard.querySelector(`#balance-${coinID} .balance-amount`);
+                    const myBalanceDisplayP = existingCard.querySelector(`#balance-${coinID}`);
+                    const accountActionsDiv = existingCard.querySelector('.account-actions');
+                    
+                    const createBtn = accountActionsDiv.querySelector('.create-account-btn');
+                    const loginBtn = accountActionsDiv.querySelector('.login-account-btn');
+                    const logoutBtn = accountActionsDiv.querySelector('.logout-account-btn');
+                    const transferBtn = accountActionsDiv.querySelector('.transfer-user-coins-btn');
+                    const viewTxBtn = accountActionsDiv.querySelector('.view-transactions-btn');
+
+                    if (h3.textContent !== fullCoinName) {
+                         h3.textContent = fullCoinName;
+                         existingCard.dataset.coinName = coinData.name;
+                         existingCard.dataset.coinSymbol = coinData.symbol;
+                         myBalanceDisplayP.innerHTML = `My Balance: <span class="balance-amount">${balanceSpan.textContent}</span> ${fullCoinName}`;
+                    }
+
+                    const loggedInUser = loggedInAccounts[coinID];
+                    if (loggedInUser) {
+                        myBalanceDisplayP.style.display = 'block';
+                        balanceSpan.textContent = loggedInUser.balance;
+                        
+                        if (createBtn) createBtn.style.display = 'none';
+                        if (loginBtn) loginBtn.style.display = 'none';
+                        
+                        if (logoutBtn) {
+                            logoutBtn.style.display = 'inline-block';
+                            logoutBtn.textContent = `Logout (${loggedInUser.username})`;
+                        } else {
+                            // If logout button was not found (e.g. from a fresh load while logged in)
+                            const newLogoutBtn = document.createElement('button');
+                            newLogoutBtn.className = 'logout-account-btn';
+                            newLogoutBtn.dataset.coinId = coinID;
+                            newLogoutBtn.dataset.coinName = coinData.name;
+                            newLogoutBtn.dataset.coinSymbol = coinData.symbol;
+                            newLogoutBtn.textContent = `Logout (${loggedInUser.username})`;
+                            accountActionsDiv.appendChild(newLogoutBtn);
+                            newLogoutBtn.onclick = (event) => handleAccountLogout(event);
+                        }
+                        if (transferBtn) transferBtn.style.display = 'inline-block';
+                        if (viewTxBtn) viewTxBtn.style.display = 'inline-block';
+                    } else {
+                        myBalanceDisplayP.style.display = 'none';
+                        if (transferBtn) transferBtn.style.display = 'none';
+                        if (viewTxBtn) viewTxBtn.style.display = 'none';
+                        
+                        if (createBtn) createBtn.style.display = 'inline-block';
+                        if (loginBtn) loginBtn.style.display = 'inline-block';
+                        if (logoutBtn) logoutBtn.style.display = 'none';
+                    }
+                    attachCoinCardEventListeners(existingCard, coinID, coinData.name, coinData.symbol);
+                }
+            } else if (coinData === null) {
+                console.log(`Removing coin card for deleted coin: ${coinID}`);
+                if (loggedInAccounts[coinID]) {
+                    gun.get(DB_ROOT_NAME).get('coins').get(coinID).get('accounts').get(loggedInAccounts[coinID].username).get('balance').off();
+                    if (currentUserTransactionContext.coinID === coinID && userCoinTransactionsMapListener) {
+                        gun.get(DB_ROOT_NAME).get('coins').get(coinID).get('transactions').off(userCoinTransactionsMapListener);
+                        userCoinTransactionsMapListener = null;
+                        hideUserTransactionsModal();
+                    }
+                    delete loggedInAccounts[coinID];
+                }
+                if (coinCardElements[coinID]) {
+                    coinListDiv.removeChild(coinCardElements[coinID]);
+                    delete coinCardElements[coinID];
+                    showToast(`Coin (ID: ${coinID}) was removed.`, 'warning');
+                }
+                if (Object.keys(coinCardElements).length === 0) {
+                     updateCoinListMessage('No coins found yet. Be the first to create one!', 'empty');
+                }
+            } else {
+                console.warn("Gun.js map() received invalid or skipped data (not a valid Gun node or missing props):", { coinData, coinID });
+            }
+        });
+    }
+
+    // Helper to attach event listeners to coin card buttons
+    function attachCoinCardEventListeners(coinCard, coinID, coinName, coinSymbol) {
+        const createAccountBtn = coinCard.querySelector('.create-account-btn');
+        if (createAccountBtn) {
+            createAccountBtn.onclick = () => showCreateAccountModal(coinID, coinName, coinSymbol);
+        }
+        const loginAccountBtn = coinCard.querySelector('.login-account-btn');
+        if (loginAccountBtn) {
+            loginAccountBtn.onclick = () => showLoginAccountModal(coinID, coinName, coinSymbol);
+        }
+        const logoutAccountBtn = coinCard.querySelector('.logout-account-btn');
+        if (logoutAccountBtn) {
+            logoutAccountBtn.onclick = (e) => handleAccountLogout(e);
+        }
+        const transferUserCoinsBtn = coinCard.querySelector('.transfer-user-coins-btn');
+        if (transferUserCoinsBtn) {
+            transferUserCoinsBtn.onclick = () => showTransferModal(coinID, coinName, coinSymbol, loggedInAccounts[coinID].username);
+        }
+        const viewTransactionsBtn = coinCard.querySelector('.view-transactions-btn');
+        if (viewTransactionsBtn) {
+            viewTransactionsBtn.onclick = () => showUserTransactionsModal(coinID, coinName, coinSymbol, loggedInAccounts[coinID].username);
+        }
+    }
+
+
+    // --- Account Creation/Login Handlers (Explore All Coins) ---
+
+    // Show Create Account Modal
+    function showCreateAccountModal(coinID, coinName, coinSymbol) {
+        hideAllModals(); // Hide others before showing this one
+        createAccountModal.style.display = 'flex';
+        createAccountModalCoinNameSymbolSpan.textContent = `${coinName} (${coinSymbol})`;
+        createAccountUsernameInput.value = '';
+        createAccountPasswordInput.value = '';
+        currentAccountActionCoin = { coinID, coinSymbol, coinName };
+    }
+
+    // Hide Create Account Modal
+    function hideCreateAccountModal() {
+        createAccountModal.style.display = 'none';
+        currentAccountActionCoin = { coinID: null, coinSymbol: null, coinName: null };
+    }
+
+    // Show Login Account Modal
+    function showLoginAccountModal(coinID, coinName, coinSymbol) {
+        hideAllModals(); // Hide others before showing this one
+        loginAccountModal.style.display = 'flex';
+        loginAccountModalCoinNameSymbolSpan.textContent = `${coinName} (${coinSymbol})`;
+        loginAccountUsernameInput.value = '';
+        loginAccountPasswordInput.value = '';
+        currentAccountActionCoin = { coinID, coinSymbol, coinName };
+    }
+
+    // Hide Login Account Modal
+    function hideLoginAccountModal() {
+        loginAccountModal.style.display = 'none';
+        currentAccountActionCoin = { coinID: null, coinSymbol: null, coinName: null };
+    }
+
+    // Show User Transactions Modal
+    function showUserTransactionsModal(coinID, coinName, coinSymbol, username) {
+        hideAllModals(); // Hide others before showing this one
+        userTransactionsModal.style.display = 'flex';
+        userTransactionsModalCoinNameSymbolSpan.textContent = `${coinName} (${coinSymbol})`;
+        currentUserTransactionContext = { coinID, coinSymbol, username, coinName };
+        displayUserTransactionHistory(coinID, username, coinSymbol);
+    }
+
+    // Hide User Transactions Modal
+    function hideUserTransactionsModal() {
+        userTransactionsModal.style.display = 'none';
+        if (userCoinTransactionsMapListener) {
+            gun.get(DB_ROOT_NAME).get('coins').get(currentUserTransactionContext.coinID).get('transactions').off(userCoinTransactionsMapListener);
+            userCoinTransactionsMapListener = null;
+            userTransactionsListDiv.innerHTML = '<p style="text-align: center; color: #777;">Loading transactions...</p>';
+            currentUserTransactionContext = { coinID: null, coinSymbol: null, username: null, coinName: null };
+        }
+    }
+
+
+    // Attach close button listeners for all modals
+    transferModalCloseButton.onclick = hideTransferModal;
+    createAccountModalCloseButton.onclick = hideCreateAccountModal;
+    loginAccountModalCloseButton.onclick = hideLoginAccountModal;
+    userTransactionsModalCloseButton.onclick = hideUserTransactionsModal;
+
+    // Close modals if clicking outside content
+    window.onclick = function(event) {
+        if (event.target == transferModal) {
+            hideTransferModal();
+        }
+        if (event.target == createAccountModal) {
+            hideCreateAccountModal();
+        }
+        if (event.target == loginAccountModal) {
+            hideLoginAccountModal();
+        }
+        if (event.target == userTransactionsModal) {
+            hideUserTransactionsModal();
+        }
+    };
+
+    // Attach confirm button listeners for new modals
+    confirmCreateAccountBtn.onclick = handleAccountCreation;
+    confirmLoginAccountBtn.onclick = handleAccountLogin;
+
+
+    async function handleAccountCreation() {
+        const targetCoinId = currentAccountActionCoin.coinID;
+        const targetCoinName = currentAccountActionCoin.coinName;
+        const targetCoinSymbol = currentAccountActionCoin.coinSymbol;
+        let username = createAccountUsernameInput.value.trim();
+        let password = createAccountPasswordInput.value.trim();
+
+        if (!username || username.length < 3 || !/^[a-zA-Z0-9]+$/.test(username)) {
+            showToast('Username must be at least 3 alphanumeric characters.', 'error');
+            return;
+        }
+        if (username.toLowerCase() === ownerAccountName.toLowerCase()) {
+             showToast(`Cannot use "${ownerAccountName}" as a username. It's reserved for the coin owner.`, 'error');
+             return;
+        }
+
+        if (password.length < 3 || password.length > 32) {
+            showToast('Password must be between 3 and 32 characters.', 'error');
+            return;
+        }
+        const hashedPassword = hashPassword(password);
+
+        confirmCreateAccountBtn.disabled = true;
+        confirmCreateAccountBtn.textContent = 'Creating...';
+
+        gun.get(DB_ROOT_NAME).get('coins').get(targetCoinId).get('accounts').get(username).once((userAccount) => {
+            if (userAccount && Gun.node.is(userAccount) && userAccount.balance !== undefined) {
+                showToast(`Account "${username}" already exists for ${targetCoinName} (${targetCoinSymbol}).`, 'error');
+                confirmCreateAccountBtn.disabled = false;
+                confirmCreateAccountBtn.textContent = `Create Account`;
+            } else {
+                gun.get(DB_ROOT_NAME).get('coins').get(targetCoinId).get('accounts').get(username).put({ balance: 0, pinHash: hashedPassword }, (ack) => {
+                    confirmCreateAccountBtn.disabled = false;
+                    confirmCreateAccountBtn.textContent = `Create Account`;
+                    hideCreateAccountModal();
+                    if (ack.err) {
+                        showToast(`Error creating account for ${targetCoinName} (${targetCoinSymbol}): ${ack.err}`, 'error');
+                    } else {
+                        showToast(`Account "${username}" created for ${targetCoinName} (${targetCoinSymbol}) with 0 balance! Auto-logging in...`, 'success');
+                        
+                        // Auto-login logic
+                        loggedInAccounts[targetCoinId] = { username: username, balance: 0, coinName: targetCoinName, coinSymbol: targetCoinSymbol };
+
+                        const coinCard = coinCardElements[targetCoinId];
+                        if (coinCard) {
+                            const balanceSpan = coinCard.querySelector(`#balance-${targetCoinId} .balance-amount`);
+                            const myBalanceDisplayP = coinCard.querySelector(`#balance-${targetCoinId}`);
+                            const accountActionsDiv = coinCard.querySelector('.account-actions');
+                            const transferBtn = accountActionsDiv.querySelector('.transfer-user-coins-btn');
+                            const createBtnElement = accountActionsDiv.querySelector('.create-account-btn');
+                            const loginBtnElement = accountActionsDiv.querySelector('.login-account-btn');
+                            const logoutBtnElement = accountActionsDiv.querySelector('.logout-account-btn');
+                            const viewTxBtn = accountActionsDiv.querySelector('.view-transactions-btn');
+
+
+                            myBalanceDisplayP.style.display = 'block';
+                            balanceSpan.textContent = 0;
+                            
+                            if (createBtnElement) createBtnElement.style.display = 'none';
+                            if (loginBtnElement) loginBtnElement.style.display = 'none';
+                            
+                            if (logoutBtnElement) {
+                                logoutBtnElement.style.display = 'inline-block';
+                                logoutBtnElement.textContent = `Logout (${username})`;
+                            } else {
+                                const newLogoutBtn = document.createElement('button');
+                                newLogoutBtn.className = 'logout-account-btn';
+                                newLogoutBtn.dataset.coinId = targetCoinId;
+                                newLogoutBtn.dataset.coinName = targetCoinName;
+                                newLogoutBtn.dataset.coinSymbol = targetCoinSymbol;
+                                newLogoutBtn.textContent = `Logout (${username})`;
+                                accountActionsDiv.appendChild(newLogoutBtn);
+                                newLogoutBtn.onclick = (event) => handleAccountLogout(event);
+                            }
+                            if (transferBtn) transferBtn.style.display = 'inline-block';
+                            if (viewTxBtn) viewTxBtn.style.display = 'inline-block';
+                        }
+
+                        // Start listening for balance updates
+                        gun.get(DB_ROOT_NAME).get('coins').get(targetCoinId).get('accounts').get(username).get('balance').on(function(newBalance) {
+                            if (loggedInAccounts[targetCoinId] && loggedInAccounts[targetCoinId].username === username) {
+                                loggedInAccounts[targetCoinId].balance = newBalance;
+                                const card = coinCardElements[targetCoinId];
+                                if (card) {
+                                    card.querySelector(`#balance-${targetCoinId} .balance-amount`).textContent = newBalance;
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    async function handleAccountLogin() {
+        const targetCoinId = currentAccountActionCoin.coinID;
+        const targetCoinName = currentAccountActionCoin.coinName;
+        const targetCoinSymbol = currentAccountActionCoin.coinSymbol;
+        let username = loginAccountUsernameInput.value.trim();
+        let password = loginAccountPasswordInput.value.trim();
+
+        if (!username || !password) {
+            showToast('Please enter both username and password.', 'error');
+            return;
+        }
+
+        const enteredPasswordHash = hashPassword(password);
+        
+        confirmLoginAccountBtn.disabled = true;
+        confirmLoginAccountBtn.textContent = 'Logging In...';
+
+        gun.get(DB_ROOT_NAME).get('coins').get(targetCoinId).get('accounts').get(username).once((accountData) => {
+            confirmLoginAccountBtn.disabled = false;
+            confirmLoginAccountBtn.textContent = 'Login';
+
+            if (!accountData || !Gun.node.is(accountData) || !accountData.pinHash) {
+                showToast(`Account "${username}" not found for ${targetCoinName} (${targetCoinSymbol}).`, 'error');
+                return;
+            }
+
+            // Check if logging in as the owner
+            if (username.toLowerCase() === ownerAccountName.toLowerCase()) {
+                gun.get(DB_ROOT_NAME).get('coins').get(targetCoinId).once((coinData) => {
+                    if (coinData && enteredPasswordHash === coinData.ownerPassHash) {
+                        showToast(`Admin: Successfully logged in to ${coinData.name} (${coinData.symbol}) admin panel!`, 'success');
+                        currentAdminCoinId = targetCoinId;
+                        currentCoinNameSpan.textContent = `${coinData.name} (${coinData.symbol})`;
+                        currentCoinSymbolSpan.textContent = coinData.symbol; // Store just the symbol here
+                        ownerCoinSymbolSpan.textContent = `${coinData.name} (${coinData.symbol})`;
+
+                        showAdminPanel(true);
+                        displayAdminAccounts(targetCoinId, targetCoinSymbol);
+                        displayAdminTransactionHistory(targetCoinId, targetCoinSymbol);
+                        adminGiveCoinsBtn.onclick = handleGiveCoins;
+
+                        // Removed accessCoinIdInput and accessAdminPasswordInput as they are gone
+                        // accessCoinIdInput.value = '';
+                        // accessAdminPasswordInput.value = '';
+                        hideLoginAccountModal();
+                        return;
+                    } else {
+                        showToast('Incorrect password for owner account.', 'error');
+                        return;
+                    }
+                });
+                return;
+            }
+
+
+            if (enteredPasswordHash === accountData.pinHash) {
+                loggedInAccounts[targetCoinId] = { username: username, balance: accountData.balance, coinName: targetCoinName, coinSymbol: targetCoinSymbol };
+                showToast(`Successfully logged in as "${username}" to ${targetCoinName} (${targetCoinSymbol})!`, 'success');
+                hideLoginAccountModal();
+                
+                const coinCard = coinCardElements[targetCoinId];
+                if (coinCard) {
+                    const balanceSpan = coinCard.querySelector(`#balance-${targetCoinId} .balance-amount`);
+                    const myBalanceDisplayP = coinCard.querySelector(`#balance-${targetCoinId}`);
+                    const accountActionsDiv = coinCard.querySelector('.account-actions');
+                    const transferBtn = accountActionsDiv.querySelector('.transfer-user-coins-btn');
+                    const createBtnElement = accountActionsDiv.querySelector('.create-account-btn');
+                    const loginBtnElement = accountActionsDiv.querySelector('.login-account-btn');
+                    const logoutBtnElement = accountActionsDiv.querySelector('.logout-account-btn');
+                    const viewTxBtn = accountActionsDiv.querySelector('.view-transactions-btn');
+
+                    myBalanceDisplayP.style.display = 'block';
+                    balanceSpan.textContent = accountData.balance;
+                    transferBtn.style.display = 'inline-block';
+                    viewTxBtn.style.display = 'inline-block';
+
+                    if (createBtnElement) createBtnElement.style.display = 'none';
+                    if (loginBtnElement) loginBtnElement.style.display = 'none';
+                    
+                    if (logoutBtnElement) {
+                        logoutBtnElement.style.display = 'inline-block';
+                        logoutBtnElement.textContent = `Logout (${username})`;
+                    } else {
+                        const newLogoutBtn = document.createElement('button');
+                        newLogoutBtn.className = 'logout-account-btn';
+                        newLogoutBtn.dataset.coinId = targetCoinId;
+                        newLogoutBtn.dataset.coinName = targetCoinName;
+                        newLogoutBtn.dataset.coinSymbol = targetCoinSymbol;
+                        newLogoutBtn.textContent = `Logout (${username})`;
+                        accountActionsDiv.appendChild(newLogoutBtn);
+                        newLogoutBtn.onclick = (event) => handleAccountLogout(event);
+                    }
+                }
+
+                gun.get(DB_ROOT_NAME).get('coins').get(targetCoinId).get('accounts').get(username).get('balance').on(function(newBalance) {
+                    if (loggedInAccounts[targetCoinId] && loggedInAccounts[targetCoinId].username === username) {
+                        loggedInAccounts[targetCoinId].balance = newBalance;
+                        const card = coinCardElements[targetCoinId];
+                        if (card) {
+                            card.querySelector(`#balance-${targetCoinId} .balance-amount`).textContent = newBalance;
+                        }
+                    }
+                });
+
+            } else {
+                showToast('Incorrect password.', 'error');
+            }
+        });
+    }
+
+    async function handleAccountLogout(e) {
+        const targetCoinId = e.target.dataset.coinId;
+        const targetCoinSymbol = e.target.dataset.coinSymbol;
+        const username = loggedInAccounts[targetCoinId] ? loggedInAccounts[targetCoinId].username : 'user';
+
+        if (loggedInAccounts[targetCoinId]) {
+            gun.get(DB_ROOT_NAME).get('coins').get(targetCoinId).get('accounts').get(username).get('balance').off();
+            if (currentUserTransactionContext.coinID === targetCoinId && userCoinTransactionsMapListener) {
+                gun.get(DB_ROOT_NAME).get('coins').get(targetCoinId).get('transactions').off(userCoinTransactionsMapListener);
+                userCoinTransactionsMapListener = null;
+                hideUserTransactionsModal();
+            }
+            delete loggedInAccounts[targetCoinId];
+            showToast(`Logged out from ${targetCoinSymbol}.`, 'default');
+
+            const coinCard = coinCardElements[targetCoinId];
+            if (coinCard) {
+                const myBalanceDisplayP = coinCard.querySelector(`#balance-${targetCoinId}`);
+                myBalanceDisplayP.style.display = 'none';
+                
+                const accountActionsDiv = coinCard.querySelector('.account-actions');
+                const transferBtn = accountActionsDiv.querySelector('.transfer-user-coins-btn');
+                const createBtnElement = accountActionsDiv.querySelector('.create-account-btn');
+                const loginBtnElement = accountActionsDiv.querySelector('.login-account-btn');
+                const logoutBtnElement = accountActionsDiv.querySelector('.logout-account-btn');
+                const viewTxBtn = accountActionsDiv.querySelector('.view-transactions-btn');
+
+
+                if (transferBtn) transferBtn.style.display = 'none';
+                if (viewTxBtn) viewTxBtn.style.display = 'none';
+                if (createBtnElement) createBtnElement.style.display = 'inline-block';
+                if (loginBtnElement) loginBtnElement.style.display = 'inline-block';
+                if (logoutBtnElement) logoutBtnElement.style.display = 'none';
+            }
+        }
+    }
+
+
+    // --- Admin Panel Specific Functions ---
+
+    function displayAdminAccounts(coinID, coinSymbol) {
+        if (adminCoinAccountsMapListener) {
+            gun.get(DB_ROOT_NAME).get('coins').get(currentAdminCoinId).get('accounts').off(adminCoinAccountsMapListener);
+            adminCoinAccountsMapListener = null;
+        }
+
+        adminAccountsListDiv.innerHTML = '<p style="text-align: center; color: #777;">Loading accounts...</p>';
+        const adminAccountElements = {};
+
+        gun.get(DB_ROOT_NAME).get('coins').get(coinID).get('accounts').get(ownerAccountName).get('balance').on((balance) => {
+            if (balance !== undefined && balance !== null) {
+                ownerBalanceDisplay.textContent = balance;
+            }
+        });
+
+        adminCoinAccountsMapListener = gun.get(DB_ROOT_NAME).get('coins').get(coinID).get('accounts').map().on((accountData, username) => {
+            if (adminAccountsListDiv.querySelector('p[style="text-align: center; color: #777;"]')) {
+                adminAccountsListDiv.innerHTML = '';
+            }
+
+            if (accountData && Gun.node.is(accountData) && accountData.balance !== undefined) {
+                if (!adminAccountElements[username]) {
+                    const accountDiv = document.createElement('div');
+                    accountDiv.className = 'admin-account-item';
+                    accountDiv.id = `admin-account-${username}`;
+                    accountDiv.innerHTML = `<strong>${username}:</strong> <span id="admin-balance-${username}">${accountData.balance}</span> ${currentCoinSymbolSpan.textContent}`;
+                    adminAccountsListDiv.appendChild(accountDiv);
+                    adminAccountElements[username] = accountDiv;
+                } else {
+                    const balanceSpan = adminAccountElements[username].querySelector(`#admin-balance-${username}`);
+                    if (balanceSpan) {
+                        balanceSpan.textContent = accountData.balance;
+                    }
+                }
+            } else if (accountData === null) {
+                if (adminAccountElements[username]) {
+                    adminAccountsListDiv.removeChild(adminAccountElements[username]);
+                    delete adminAccountElements[username];
+                }
+            }
+
+            if (Object.keys(adminAccountElements).length === 0) {
+                adminAccountsListDiv.innerHTML = '<p style="text-align: center; color: #777;">No accounts found yet.</p>';
+            }
+        });
+    }
+
+    // Display Admin Transaction History
+    function displayAdminTransactionHistory(coinID, coinSymbol) {
+        if (adminCoinTransactionsMapListener) {
+            gun.get(DB_ROOT_NAME).get('coins').get(currentAdminCoinId).get('transactions').off(adminCoinTransactionsMapListener);
+            adminCoinTransactionsMapListener = null;
+        }
+
+        adminTransactionsListDiv.innerHTML = '<p style="text-align: center; color: #777;">Loading transactions...</p>';
+        const adminTransactionElements = {};
+
+        adminCoinTransactionsMapListener = gun.get(DB_ROOT_NAME).get('coins').get(coinID).get('transactions').map().on((txData, txID) => {
+            if (adminTransactionsListDiv.querySelector('p[style="text-align: center; color: #777;"]')) {
+                adminTransactionsListDiv.innerHTML = '';
+            }
+
+            if (txData && Gun.node.is(txData) && txData.type && txData.from && txData.to && txData.amount && txData.timestamp) {
+                if (!adminTransactionElements[txID]) {
+                    const transactionDiv = document.createElement('div');
+                    transactionDiv.className = `transaction-item ${txData.type}`;
+                    transactionDiv.id = `admin-tx-${txID}`;
+                    
+                    const fullCoinNameForTx = `${currentCoinNameSpan.textContent.split('(')[0].trim()} (${txData.coinSymbol})`;
+                    let description;
+                    if (txData.type === 'mint') {
+                        description = `<strong>Mint:</strong> ${txData.from} gave ${txData.amount} ${fullCoinNameForTx} to ${txData.to}`;
+                    } else if (txData.type === 'transfer') {
+                        description = `<strong>Transfer:</strong> ${txData.from} sent ${txData.amount} ${fullCoinNameForTx} to ${txData.to}`;
+                    } else {
+                        description = `<strong>${txData.type}:</strong> From ${txData.from}, To ${txData.to}, Amount ${txData.amount} ${fullCoinNameForTx}`;
+                    }
+
+                    transactionDiv.innerHTML = `
+                        <span class="timestamp">${formatTimestamp(txData.timestamp)}</span>
+                        ${description}
+                    `;
+                    adminTransactionsListDiv.prepend(transactionDiv);
+                    adminTransactionElements[txID] = transactionDiv;
+                }
+            } else if (txData === null) {
+                if (adminTransactionElements[txID]) {
+                    adminTransactionsListDiv.removeChild(adminTransactionElements[txID]);
+                    delete adminTransactionElements[txID];
+                }
+            }
+
+            if (Object.keys(adminTransactionElements).length === 0) {
+                adminTransactionsListDiv.innerHTML = '<p style="text-align: center; color: #777;">No transactions recorded yet.</p>';
+            }
+        });
+    }
+
+    // Admin can 'give' (mint) coins, increasing total supply and target's balance
+    async function handleGiveCoins() {
+        const targetUsername = adminGiveTargetUsernameInput.value.trim();
+        const amount = parseInt(adminGiveAmountInput.value);
+
+        if (!targetUsername || isNaN(amount) || amount <= 0) {
+            showToast('Please enter a valid target username and positive amount to give.', 'error');
+            return;
+        }
+        if (targetUsername.length < 3 || !/^[a-zA-Z0-9]+$/.test(targetUsername)) {
+            showToast('Target username must be at least 3 alphanumeric characters.', 'error');
+            return;
+        }
+
+        adminGiveCoinsBtn.disabled = true;
+        adminGiveCoinsBtn.textContent = 'Giving...';
+
+        const coinRef = gun.get(DB_ROOT_NAME).get('coins').get(currentAdminCoinId);
+        const targetAccountRef = coinRef.get('accounts').get(targetUsername);
+
+        targetAccountRef.once((targetData) => {
+            if (!targetData || !Gun.node.is(targetData) || targetData.balance === undefined) {
+                showToast(`Target user "${targetUsername}" not found or account invalid. Cannot give coins.`, 'error');
+                adminGiveCoinsBtn.disabled = false;
+                adminGiveCoinsBtn.textContent = 'Give Coins';
+                return;
+            }
+
+            const newTargetBalance = targetData.balance + amount;
+
+            targetAccountRef.put({ balance: newTargetBalance }, (targetAck) => {
+                adminGiveCoinsBtn.disabled = false;
+                adminGiveCoinsBtn.textContent = 'Give Coins';
+                if (targetAck.err) {
+                    showToast(`Error giving coins to ${targetUsername}: ${targetAck.err}`, 'error');
+                } else {
+                    showToast(`Successfully gave ${amount} ${currentCoinSymbolSpan.textContent} to ${targetUsername}!`, 'success');
+                    adminGiveTargetUsernameInput.value = '';
+                    adminGiveAmountInput.value = '1';
+
+                    const tx = {
+                        timestamp: Date.now(),
+                        type: 'mint',
+                        from: ownerAccountName,
+                        to: targetUsername,
+                        amount: amount,
+                        coinSymbol: currentCoinSymbolSpan.textContent
+                    };
+                    coinRef.get('transactions').set(tx);
+
+                    const recipientLoggedInInfo = loggedInAccounts[currentAdminCoinId];
+                    if (recipientLoggedInInfo && recipientLoggedInInfo.username === targetUsername) {
+                        showToast(`Received ${amount} ${currentCoinNameSpan.textContent} from Admin!`, 'success', 5000);
+                    }
+                }
+            });
+        });
+    }
+
+    // --- User-to-User Transfer Functions ---
+
+    function showTransferModal(coinID, coinName, coinSymbol, senderUsername) {
+        hideAllModals(); // Hide others before showing this one
+        transferModal.style.display = 'flex';
+        modalCoinNameSymbolSpan.textContent = `${coinName} (${coinSymbol})`;
+        modalSenderUsernameSpan.textContent = senderUsername;
+        modalRecipientUsernameInput.value = '';
+        modalTransferAmountInput.value = '1';
+        currentTransferSender = { coinID, coinName, coinSymbol, username: senderUsername };
+    }
+
+    function hideTransferModal() {
+        transferModal.style.display = 'none';
+        currentTransferSender = { coinID: null, coinName: null, coinSymbol: null, username: null };
+    }
+
+    // Confirm Transfer button in modal
+    confirmTransferBtn.onclick = handleUserTransfer;
+
+    async function handleUserTransfer() {
+        const coinID = currentTransferSender.coinID;
+        const coinName = currentTransferSender.coinName;
+        const coinSymbol = currentTransferSender.coinSymbol;
+        const senderUsername = currentTransferSender.username;
+        const recipientUsername = modalRecipientUsernameInput.value.trim();
+        const amount = parseInt(modalTransferAmountInput.value);
+
+        if (!recipientUsername || isNaN(amount) || amount <= 0) {
+            showToast('Please enter a valid recipient username and positive amount.', 'error');
+            return;
+        }
+        if (recipientUsername.toLowerCase() === senderUsername.toLowerCase()) {
+            showToast('Cannot transfer coins to yourself.', 'error');
+            return;
+        }
+        if (recipientUsername.length < 3 || !/^[a-zA-Z0-9]+$/.test(recipientUsername)) {
+            showToast('Recipient username must be at least 3 alphanumeric characters.', 'error');
+            return;
+        }
+
+
+        confirmTransferBtn.disabled = true;
+        confirmTransferBtn.textContent = 'Transferring...';
+
+        const coinRef = gun.get(DB_ROOT_NAME).get('coins').get(coinID);
+        const senderAccountRef = coinRef.get('accounts').get(senderUsername);
+        const recipientAccountRef = coinRef.get('accounts').get(recipientUsername);
+
+        senderAccountRef.once((senderData) => {
+            if (!senderData || !Gun.node.is(senderData) || senderData.balance === undefined) {
+                showToast('Sender account not found or invalid. Please re-login.', 'error');
+                confirmTransferBtn.disabled = false;
+                confirmTransferBtn.textContent = 'Confirm Transfer';
+                hideTransferModal();
+                return;
+            }
+
+            const currentSenderBalance = senderData.balance;
+            if (currentSenderBalance < amount) {
+                showToast(`Insufficient balance. You have ${currentSenderBalance} ${coinName} (${coinSymbol}).`, 'error');
+                confirmTransferBtn.disabled = false;
+                confirmTransferBtn.textContent = 'Confirm Transfer';
+                return;
+            }
+
+            recipientAccountRef.once((recipientData) => {
+                if (!recipientData || !Gun.node.is(recipientData) || recipientData.balance === undefined) {
+                    showToast(`Recipient user "${recipientUsername}" not found or account invalid.`, 'error');
+                    confirmTransferBtn.disabled = false;
+                    confirmTransferBtn.textContent = 'Confirm Transfer';
+                    return;
+                }
+
+                const newSenderBalance = currentSenderBalance - amount;
+                const newRecipientBalance = recipientData.balance + amount;
+
+                senderAccountRef.put({ balance: newSenderBalance }, (senderAck) => {
+                    if (senderAck.err) {
+                        showToast(`Error updating your balance: ${senderAck.err}`, 'error');
+                        confirmTransferBtn.disabled = false;
+                        confirmTransferBtn.textContent = 'Confirm Transfer';
+                        return;
+                    }
+
+                    recipientAccountRef.put({ balance: newRecipientBalance }, (recipientAck) => {
+                        confirmTransferBtn.disabled = false;
+                        confirmTransferBtn.textContent = 'Confirm Transfer';
+                        hideTransferModal();
+                        if (recipientAck.err) {
+                            showToast(`Error updating ${recipientUsername}'s balance: ${recipientAck.err}`, 'error');
+                        } else {
+                            showToast(`Successfully transferred ${amount} ${coinName} (${coinSymbol}) to ${recipientUsername}!`, 'success');
+
+                            const tx = {
+                                timestamp: Date.now(),
+                                type: 'transfer',
+                                from: senderUsername,
+                                to: recipientUsername,
+                                amount: amount,
+                                coinSymbol: coinSymbol
+                            };
+                            coinRef.get('transactions').set(tx);
+
+                            const recipientLoggedInInfo = loggedInAccounts[coinID];
+                            if (recipientLoggedInInfo && recipientLoggedInInfo.username === recipientUsername) {
+                                showToast(`Received ${amount} ${coinName} (${coinSymbol}) from ${senderUsername}!`, 'success', 5000);
+                            }
+                            const senderLoggedInInfo = loggedInAccounts[coinID];
+                            if (senderLoggedInInfo && senderLoggedInInfo.username === senderUsername) {
+                                showToast(`Sent ${amount} ${coinName} (${coinSymbol}) to ${recipientUsername}!`, 'default', 5000);
+                            }
+                        }
+                    });
+                });
+            });
+        });
+    }
+
+    // Display User Transaction History
+    function displayUserTransactionHistory(coinID, username, coinSymbol) {
+        if (userCoinTransactionsMapListener) {
+            gun.get(DB_ROOT_NAME).get('coins').get(currentUserTransactionContext.coinID).get('transactions').off(userCoinTransactionsMapListener);
+            userCoinTransactionsMapListener = null;
+        }
+
+        userTransactionsListDiv.innerHTML = '<p style="text-align: center; color: #777;">Loading transactions...</p>';
+        const userTransactionElements = {};
+
+        userCoinTransactionsMapListener = gun.get(DB_ROOT_NAME).get('coins').get(coinID).get('transactions').map().on((txData, txID) => {
+            if (userTransactionsListDiv.querySelector('p[style="text-align: center; color: #777;"]')) {
+                userTransactionsListDiv.innerHTML = '';
+            }
+
+            if (txData && Gun.node.is(txData) && txData.type && txData.from && txData.to && txData.amount && txData.timestamp) {
+                if (txData.from === username || txData.to === username) {
+                    if (!userTransactionElements[txID]) {
+                        const transactionDiv = document.createElement('div');
+                        transactionDiv.className = `transaction-item ${txData.type}`;
+                        transactionDiv.id = `user-tx-${txID}`;
+                        
+                        const fullCoinNameForTx = `${currentUserTransactionContext.coinName} (${txData.coinSymbol})`;
+                        let description;
+                        if (txData.type === 'mint') {
+                            description = `<strong>Received (Mint):</strong> ${txData.amount} ${fullCoinNameForTx} from Admin`;
+                        } else if (txData.type === 'transfer') {
+                            if (txData.from === username) {
+                                description = `<strong>Sent:</strong> ${txData.amount} ${fullCoinNameForTx} to ${txData.to}`;
+                            } else {
+                                description = `<strong>Received:</strong> ${txData.amount} ${fullCoinNameForTx} from ${txData.from}`;
+                            }
+                        }
+
+                        transactionDiv.innerHTML = `
+                            <span class="timestamp">${formatTimestamp(txData.timestamp)}</span>
+                            ${description}
+                        `;
+                        userTransactionsListDiv.prepend(transactionDiv);
+                        userTransactionElements[txID] = transactionDiv;
+                    }
+                }
+            } else if (txData === null) {
+                if (userTransactionElements[txID]) {
+                    userTransactionsListDiv.removeChild(userTransactionElements[txID]);
+                    delete userTransactionElements[txID];
+                }
+            }
+
+            if (Object.keys(userTransactionElements).length === 0 && userTransactionsListDiv.children.length === 0) {
+                userTransactionsListDiv.innerHTML = '<p style="text-align: center; color: #777;">No transactions found for your account yet.</p>';
+            }
+        });
+    }
+
+
+    // --- Search Logic ---
+    searchCoinsInput.onkeyup = () => {
+        const searchTerm = searchCoinsInput.value.toLowerCase().trim();
+        for (const coinId in coinCardElements) {
+            const card = coinCardElements[coinId];
+            const coinName = card.dataset.coinName.toLowerCase();
+            const coinSymbol = card.dataset.coinSymbol.toLowerCase();
+
+            if (coinName.includes(searchTerm) || coinSymbol.includes(searchTerm)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    };
+
+
+    // --- Initial Load ---
+    document.addEventListener('DOMContentLoaded', () => {
+        showInitialUI();
+        displayAllCoins();
+    });
+  </script>
+</body>
+</html>
